@@ -1,12 +1,11 @@
-// src/pages/AdminLogin.tsx
 import React, { useState } from 'react';
 import { Button, TextField, Typography, Paper, Box } from '@mui/material';
+import mockAdmin from '../data/mock_admin.json';
 
 export interface AdminInfo {
   id: number;
   email: string;
   login: string;
-  password: string;
   date_registration: string;
   last_login_date: string;
   subscription_status: boolean;
@@ -23,16 +22,14 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (login === 'admin' && password === 'admin123') {
-      // Мок-данные администратора
+    if (login === mockAdmin.login && password === mockAdmin.password) {
       onLogin({
-        id: 1,
-        email: 'admin@example.com',
-        login: 'admin',
-        password: 'admin123',
-        date_registration: '2024-01-01',
-        last_login_date: '2025-04-02',
-        subscription_status: true,
+        id: mockAdmin.id,
+        email: mockAdmin.email,
+        login: mockAdmin.login,
+        date_registration: mockAdmin.date_registration,
+        last_login_date: mockAdmin.last_login_date,
+        subscription_status: mockAdmin.subscription_status
       });
     } else {
       alert('Неверный логин или пароль');
