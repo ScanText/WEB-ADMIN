@@ -8,13 +8,20 @@ import axios from 'axios';
 import FeedbackChart from './components/FeedbackChart';
 import VisitorsChart from './components/VisitorsChart';
 import PaymentsChart from './components/PaymentsChart';
+import {
+  Card, CardContent, CardHeader, Divider,
+  IconButton, Collapse
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 const App: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [adminInfo, setAdminInfo] = useState<AdminInfo | null>(null);
   const [selectedPage, setSelectedPage] = useState<'payments' | 'feedbacks'>('payments');
   const [uploadCount, setUploadCount] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(true); // 👈 добавим флаг загрузки
+  const [isLoading, setIsLoading] = useState(true);
+  const [adminOpen, setAdminOpen] = useState(true);
 
   useEffect(() => {
     const storedAdmin = localStorage.getItem("adminInfo");
@@ -22,7 +29,7 @@ const App: React.FC = () => {
       setAdminInfo(JSON.parse(storedAdmin));
       setLoggedIn(true);
     }
-    setIsLoading(false); // ✅ установка флага после чтения из localStorage
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -32,7 +39,7 @@ const App: React.FC = () => {
         .then(res => setUploadCount(res.data.upload_count))
         .catch(err => {
           console.warn("⚠️ Не удалось получить статистику загрузок:", err);
-          setUploadCount(0); // по умолчанию
+          setUploadCount(0);
         });
     }
   }, [adminInfo]);
@@ -64,49 +71,78 @@ const App: React.FC = () => {
       <Sidebar onSelect={(page) => setSelectedPage(page as 'payments' | 'feedbacks')} />
 
       <Box component="main" sx={{ flexGrow: 1, p: 4 }}>
-        {adminInfo && (
-          <Box mb={4}>
-            <Typography variant="h6" gutterBottom>👤 Информация о пользователе</Typography>
-            <ul style={{ lineHeight: '1.8', paddingLeft: '1rem' }}>
-              <li><strong>ID:</strong> {adminInfo.id}</li>
-              <li><strong>E-mail:</strong> {adminInfo.email}</li>
-              <li><strong>Login:</strong> {adminInfo.login}</li>
-              <li><strong>Date registration:</strong> {adminInfo.date_registration}</li>
-              <li><strong>Last login date:</strong> {adminInfo.last_login_date}</li>
-              <li><strong>Subscription status:</strong> {adminInfo.subscription_status ? 'Активна' : 'Неактивна'}</li>
-              <li><strong>📸 Загрузок:</strong> {uploadCount}</li>
-            </ul>
-           {/* 👇 Графики статистики */}
-           <Box mt={4}>
-              <Typography variant="h6" gutterBottom>📊 Общая статистика</Typography>
+      {adminInfo && (
+        <>
+          {/* 🧑‍💼 Информация об администраторе */}
+          <Card sx={{ maxWidth: 460, mb: 4 }}>
+            <CardHeader
+              title="🧑‍💼 Информация об администраторе"
+              action={
+                <IconButton onClick={() => setAdminOpen(prev => !prev)}>
+                  {adminOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </IconButton>
+              }
+            />
+            <Collapse in={adminOpen} timeout="auto" unmountOnExit>
+              <Divider />
+              <CardContent>
+                <ul style={{ lineHeight: '1.8', paddingLeft: '1rem', margin: 0 }}>
+                  <li>📎 <strong>ID:</strong> {adminInfo.id}</li>
+                  <li>📧 <strong>E-mail:</strong> {adminInfo.email}</li>
+                  <li>🔐 <strong>Login:</strong> {adminInfo.login}</li>
+                  <li>📅 <strong>Дата регистрации:</strong> {adminInfo.date_registration}</li>
+                  <li>🕒 <strong>Последний вход:</strong> {adminInfo.last_login_date}</li>
+                  <li>
+                    {adminInfo.subscription_status ? '✅ Подписка активна' : '❌ Подписка неактивна'}
+                  </li>
+                  <li>📸 <strong>Загрузок:</strong> {uploadCount}</li>
+                </ul>
 
-              <Box display="flex" gap={4} flexWrap="wrap">
-                <Box>
-                  <Typography align="center" variant="subtitle1">Отзывы</Typography>
-                  <FeedbackChart />
-                </Box>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={handleLogout}
+                  sx={{ mt: 3 }}
+                  fullWidth
+                >
+                  🔓 Выйти из панели
+                </Button>
+              </CardContent>
+            </Collapse>
+          </Card>
 
-                <Box>
-                  <Typography align="center" variant="subtitle1">Посетители</Typography>
-                  <VisitorsChart />
-                </Box>
+          {/* 📊 Блок с графиками в одну строку */}
+          <Box display="flex" gap={3} flexWrap="wrap" mb={4}>
+            <Card sx={{ minWidth: 300, flex: '1 1 300px' }}>
+              <CardContent>
+                <Typography align="center" variant="subtitle1" gutterBottom>📊 Отзывы</Typography>
+                <FeedbackChart />
+              </CardContent>
+            </Card>
 
-                <Box>
-                  <Typography align="center" variant="subtitle1">Платежи</Typography>
-                  <PaymentsChart />
-                </Box>
-              </Box>
-            </Box>
+            <Card sx={{ minWidth: 300, flex: '1 1 300px' }}>
+              <CardContent>
+                <Typography align="center" variant="subtitle1" gutterBottom>👥 Посетители</Typography>
+                <VisitorsChart />
+              </CardContent>
+            </Card>
 
-            <Button variant="outlined" color="error" onClick={handleLogout} sx={{ mt: 2 }}>
-              Выйти
-            </Button>
+            <Card sx={{ minWidth: 300, flex: '1 1 300px' }}>
+              <CardContent>
+                <Typography align="center" variant="subtitle1" gutterBottom>💰 Платежи</Typography>
+                <PaymentsChart />
+              </CardContent>
+            </Card>
           </Box>
-        )}
+        </>
+      )}
 
-        {selectedPage === 'payments' && <Payments />}
-        {selectedPage === 'feedbacks' && <Feedbacks />}
-      </Box>
+      {/* Страницы */}
+      {selectedPage === 'payments' && <Payments />}
+      {selectedPage === 'feedbacks' && <Feedbacks />}
+    </Box>
+
+
     </div>
   );
 };
