@@ -5,6 +5,9 @@ import Feedbacks from './pages/Feedbacks';
 import AdminLogin, { AdminInfo } from './pages/AdminLogin';
 import { Box, Typography, Button, CircularProgress } from '@mui/material';
 import axios from 'axios';
+import FeedbackChart from './components/FeedbackChart';
+import VisitorsChart from './components/VisitorsChart';
+import PaymentsChart from './components/PaymentsChart';
 
 const App: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -73,6 +76,28 @@ const App: React.FC = () => {
               <li><strong>Subscription status:</strong> {adminInfo.subscription_status ? 'Активна' : 'Неактивна'}</li>
               <li><strong>📸 Загрузок:</strong> {uploadCount}</li>
             </ul>
+           {/* 👇 Графики статистики */}
+           <Box mt={4}>
+              <Typography variant="h6" gutterBottom>📊 Общая статистика</Typography>
+
+              <Box display="flex" gap={4} flexWrap="wrap">
+                <Box>
+                  <Typography align="center" variant="subtitle1">Отзывы</Typography>
+                  <FeedbackChart />
+                </Box>
+
+                <Box>
+                  <Typography align="center" variant="subtitle1">Посетители</Typography>
+                  <VisitorsChart />
+                </Box>
+
+                <Box>
+                  <Typography align="center" variant="subtitle1">Платежи</Typography>
+                  <PaymentsChart />
+                </Box>
+              </Box>
+            </Box>
+
             <Button variant="outlined" color="error" onClick={handleLogout} sx={{ mt: 2 }}>
               Выйти
             </Button>

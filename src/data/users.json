@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1,
+    "username": "alice",
+    "email": "alice@example.com",
+    "subscription_status": true
+  },
+  {
+    "id": 2,
+    "username": "bob",
+    "email": "bob@example.com",
+    "subscription_status": false
+  },
+  {
+    "id": 3,
+    "username": "carol",
+    "email": "carol@example.com",
+    "subscription_status": true
+  },
+  {
+    "id": 4,
+    "username": "dave",
+    "email": "dave@example.com",
+    "subscription_status": false
+  }
+]
+  
