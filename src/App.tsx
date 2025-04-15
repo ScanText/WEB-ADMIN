@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import Users from './pages/Users';
+
 import Sidebar from './components/Sidebar';
 import Payments from './pages/Payments';
 import Feedbacks from './pages/Feedbacks';
 import AdminLogin, { AdminInfo } from './pages/AdminLogin';
 import { Box, Typography, Button, CircularProgress } from '@mui/material';
-import axios from 'axios';
+// import axios from 'axios';
 import FeedbackChart from './components/FeedbackChart';
 import VisitorsChart from './components/VisitorsChart';
 import PaymentsChart from './components/PaymentsChart';
@@ -14,36 +16,38 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { fetchUploadStats } from './services/AdminService';
+
 
 const App: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [adminInfo, setAdminInfo] = useState<AdminInfo | null>(null);
-  const [selectedPage, setSelectedPage] = useState<'payments' | 'feedbacks'>('payments');
+  const [selectedPage, setSelectedPage] = useState<'payments' | 'feedbacks' | 'users'>('payments');
   const [uploadCount, setUploadCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [adminOpen, setAdminOpen] = useState(true);
 
   useEffect(() => {
-    const storedAdmin = localStorage.getItem("adminInfo");
-    if (storedAdmin) {
-      setAdminInfo(JSON.parse(storedAdmin));
+    const stored = localStorage.getItem("adminInfo");
+    if (stored) {
+      setAdminInfo(JSON.parse(stored));
       setLoggedIn(true);
     }
     setIsLoading(false);
   }, []);
+  
 
   useEffect(() => {
     if (adminInfo) {
-      axios
-        .get(`https://api.example.com/admin/${adminInfo.id}/stats`)
-        .then(res => setUploadCount(res.data.upload_count))
-        .catch(err => {
+      fetchUploadStats(adminInfo.id)
+        .then((res: { upload_count: number }) => setUploadCount(res.upload_count))
+        .catch((err: unknown) => {
           console.warn("⚠️ Не удалось получить статистику загрузок:", err);
           setUploadCount(0);
         });
     }
   }, [adminInfo]);
-
+  
   const handleLogout = () => {
     localStorage.removeItem("adminInfo");
     setAdminInfo(null);
@@ -138,10 +142,10 @@ const App: React.FC = () => {
       )}
 
       {/* Страницы */}
+      {selectedPage === 'users' && <Users />}
       {selectedPage === 'payments' && <Payments />}
       {selectedPage === 'feedbacks' && <Feedbacks />}
     </Box>
-
 
     </div>
   );
