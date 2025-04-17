@@ -1,26 +1,39 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
-import payments from '../data/payments_history.json';
 
-const COLORS = ['#ff5722', '#ff9800', '#ffc107', '#795548'];
+interface Payment {
+  id: number;
+  user_login?: string;
+  wallet_address: string;
+  amount: number;
+  status?: string;
+  reference?: string;
+  created_at: string;
+}
 
-const PaymentsChart: React.FC = () => {
-  const walletStats: Record<string, number> = {};
+interface PaymentsChartProps {
+  payments: Payment[];
+}
+
+const COLORS = ['#ff5722', '#ff9800', '#4caf50', '#3f51b5', '#9c27b0', '#2196f3'];
+
+const PaymentsChart: React.FC<PaymentsChartProps> = ({ payments }) => {
+  const loginStats: Record<string, number> = {};
 
   payments.forEach(p => {
-    walletStats[p.wallet_address] = (walletStats[p.wallet_address] || 0) + 1;
+    const login = p.user_login || 'неизвестно';
+    loginStats[login] = (loginStats[login] || 0) + 1;
   });
 
-  const data = Object.entries(walletStats).map(([name, value]) => ({ name, value }));
+  const data = Object.entries(loginStats).map(([name, value]) => ({ name, value }));
 
   return (
-    <PieChart width={400} height={300}>
+    <PieChart width={420} height={300}>
       <Pie
         data={data}
         cx="50%"
         cy="50%"
         outerRadius={100}
-        fill="#8884d8"
         dataKey="value"
         label
       >
