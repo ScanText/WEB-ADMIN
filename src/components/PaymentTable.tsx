@@ -1,30 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import {
   Table, TableHead, TableRow, TableCell,
-  TableBody, Paper, Typography, TableContainer, Select, MenuItem, Chip
+  TableBody, Paper, Typography, TableContainer, Select, MenuItem, Chip, Button, Box
 } from '@mui/material';
 import { Payment } from '../types/Payment';
 import { updateUserSubscription } from '../services/AdminService';
-import axios from 'axios';  
+import axios from 'axios';
 
 interface PaymentsTableProps {
-  adminId: number; 
+  adminId: number;
 }
 
 const PaymentsTable: React.FC<PaymentsTableProps> = ({ adminId }) => {
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchPayments = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get('http://localhost:8000/payment/all');
+      const fixedData = res.data.map((payment: any) => ({
+        ...payment,
+        subscription_status: (payment.subscription_status || 'free') as 'free' | 'plus' | 'premium',
+      }));
+      setPayments(fixedData);
+      console.log('✅ Платежи обновлены!');
+    } catch (err) {
+      console.error('❌ Ошибка загрузки платежей:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (adminId) {
-      axios.get('http://localhost:8000/payment/all')
-      .then(res => {
-        const fixedData = res.data.map((payment: any) => ({
-          ...payment,
-          subscription_status: (payment.subscription_status || 'free') as 'free' | 'plus' | 'premium',
-        }));
-        setPayments(fixedData);
-      })
-        .catch(err => console.error('Ошибка загрузки платежей:', err));
+      fetchPayments();
     }
   }, [adminId]);
 
@@ -41,8 +51,20 @@ const PaymentsTable: React.FC<PaymentsTableProps> = ({ adminId }) => {
 
   return (
     <div>
-      <Typography variant="h5" gutterBottom>💸 История платежей</Typography>
+      {/* 🔥 Шапка с кнопкой обновления */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h5" gutterBottom>💸 История платежей</Typography>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={fetchPayments}
+          disabled={loading}
+        >
+          🔄 Обновить
+        </Button>
+      </Box>
 
+      {/* 🔥 Таблица */}
       <TableContainer component={Paper} sx={{ maxHeight: 440 }}>
         <Table stickyHeader size="small">
           <TableHead>
@@ -99,3 +121,4 @@ const PaymentsTable: React.FC<PaymentsTableProps> = ({ adminId }) => {
 };
 
 export default PaymentsTable;
+
