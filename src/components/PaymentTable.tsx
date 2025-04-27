@@ -1,48 +1,101 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import {
+  Table, TableHead, TableRow, TableCell,
+  TableBody, Paper, Typography, TableContainer, Select, MenuItem, Chip
+} from '@mui/material';
+import { Payment } from '../types/Payment';
+import { updateUserSubscription } from '../services/AdminService';
+import axios from 'axios';  
 
-interface Payment {
-  id: number;
-  user_login?: string | null;
-  wallet_address: string;
-  amount?: number;
-  status?: string;
-  reference?: string | null;
-  created_at: string;
+interface PaymentsTableProps {
+  adminId: number; 
 }
 
-interface PaymentTableProps {
-  payments: Payment[];
-}
+const PaymentsTable: React.FC<PaymentsTableProps> = ({ adminId }) => {
+  const [payments, setPayments] = useState<Payment[]>([]);
 
-const PaymentTable: React.FC<PaymentTableProps> = ({ payments }) => {
+  useEffect(() => {
+    if (adminId) {
+      axios.get('http://localhost:8000/payment/all')
+      .then(res => {
+        const fixedData = res.data.map((payment: any) => ({
+          ...payment,
+          subscription_status: (payment.subscription_status || 'free') as 'free' | 'plus' | 'premium',
+        }));
+        setPayments(fixedData);
+      })
+        .catch(err => console.error('Ошибка загрузки платежей:', err));
+    }
+  }, [adminId]);
+
+  const handleSubscriptionChange = (paymentId: number, userId: number, newStatus: string) => {
+    const updatedPayments = payments.map((p) =>
+      p.id === paymentId ? { ...p, subscription_status: newStatus as 'free' | 'plus' | 'premium' } : p
+    );
+    setPayments(updatedPayments);
+
+    updateUserSubscription(userId, newStatus)
+      .then(() => console.log(`✅ Подписка пользователя ${userId} обновлена на ${newStatus}`))
+      .catch((error) => console.error('❌ Ошибка при обновлении подписки:', error));
+  };
+
   return (
-    <table border={1} style={{ width: '100%', marginTop: 20, borderCollapse: 'collapse' }}>
-      <thead>
-        <tr style={{ background: '#f0f0f0' }}>
-          <th>ID</th>
-          <th>Логин</th>
-          <th>Кошелёк</th>
-          <th>Сумма</th>
-          <th>Статус</th>
-          <th>Reference</th>
-          <th>Дата</th>
-        </tr>
-      </thead>
-      <tbody>
-        {payments.map((p) => (
-          <tr key={p.id}>
-            <td>{p.id}</td>
-            <td>{p.user_login || '—'}</td>
-            <td>{p.wallet_address}</td>
-            <td>{p.amount ?? '—'} ₴</td>
-            <td>{p.status ?? '—'}</td>
-            <td>{p.reference || '—'}</td>
-            <td>{new Date(p.created_at).toLocaleString()}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div>
+      <Typography variant="h5" gutterBottom>💸 История платежей</Typography>
+
+      <TableContainer component={Paper} sx={{ maxHeight: 440 }}>
+        <Table stickyHeader size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Пользователь (ID)</TableCell>
+              <TableCell>Подписка</TableCell>
+              <TableCell>Метод оплаты</TableCell>
+              <TableCell>Сумма</TableCell>
+              <TableCell>Статус</TableCell>
+              <TableCell>Транзакция</TableCell>
+              <TableCell>Дата</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {payments.map((payment) => (
+              <TableRow key={payment.id}>
+                <TableCell>{payment.id}</TableCell>
+                <TableCell>{payment.user_id}</TableCell>
+                <TableCell>
+                  <Select
+                    size="small"
+                    value={payment.subscription_status || 'free'}
+                    onChange={(e) => handleSubscriptionChange(payment.id, payment.user_id, e.target.value)}
+                    variant="standard"
+                    disableUnderline
+                    sx={{ minWidth: 140 }}
+                  >
+                    <MenuItem value="free">Бесплатная</MenuItem>
+                    <MenuItem value="plus">Plus (99 грн)</MenuItem>
+                    <MenuItem value="premium">Premium (199 грн)</MenuItem>
+                  </Select>
+                </TableCell>
+                <TableCell>{payment.method || '—'}</TableCell>
+                <TableCell>{payment.amount !== null ? `${payment.amount} ${payment.currency}` : '—'}</TableCell>
+                <TableCell>
+                  {payment.status === 'success' ? (
+                    <Chip label="Успешно" color="success" size="small" />
+                  ) : payment.status === 'pending' ? (
+                    <Chip label="Ожидание" color="warning" size="small" />
+                  ) : (
+                    <Chip label="Ошибка" color="error" size="small" />
+                  )}
+                </TableCell>
+                <TableCell>{payment.transaction_id || '—'}</TableCell>
+                <TableCell>{new Date(payment.timestamp).toLocaleString()}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </div>
   );
 };
 
-export default PaymentTable;
+export default PaymentsTable;

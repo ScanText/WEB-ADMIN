@@ -3,25 +3,15 @@ import {
   Table, TableHead, TableRow, TableCell,
   TableBody, Paper, Typography, TableContainer
 } from '@mui/material';
-import { getPayments } from '../services/AdminService';
+import { getAllPayments } from '../services/AdminService';
+import { Payment } from '../types/Payment';
+import { AdminInfo } from './AdminLogin';
 
-interface Payment {
-  id: number;
-  wallet_address: string;
-  amount: number | null;
-  status: string | null;
-  timestamp: string;
-  user: {
-    id: number;
-    username: string;
-  };
-}
-
-const Payments: React.FC = () => {
+const Payments: React.FC<{ admin: AdminInfo }> = ({ admin }) => {
   const [payments, setPayments] = useState<Payment[]>([]);
 
   useEffect(() => {
-    getPayments()
+    getAllPayments()
       .then((data) => setPayments(data))
       .catch((err) => console.error('❌ Ошибка загрузки платежей:', err));
   }, []);
@@ -37,27 +27,36 @@ const Payments: React.FC = () => {
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
-              <TableCell>Имя пользователя</TableCell>
-              <TableCell>Кошелёк</TableCell>
+              <TableCell>Пользователь (ID)</TableCell>
+              <TableCell>Метод оплаты</TableCell>
               <TableCell>Сумма</TableCell>
               <TableCell>Статус</TableCell>
+              <TableCell>Транзакция</TableCell>
               <TableCell>Дата</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {payments.map((payment) => (
+            {payments.length > 0 ? payments.map((payment) => (
               <TableRow key={payment.id}>
                 <TableCell>{payment.id}</TableCell>
-                <TableCell>{payment.user?.username || '—'}</TableCell>
-                <TableCell>{payment.wallet_address || '—'}</TableCell>
-                <TableCell>{payment.amount !== null ? `${payment.amount} UAH` : '—'}</TableCell>
-                <TableCell>{payment.status || 'не указан'}</TableCell>
+                <TableCell>{payment.user_id}</TableCell>
+                <TableCell>{payment.method || '—'}</TableCell>
+                <TableCell>{payment.amount !== null ? `${payment.amount} ${payment.currency}` : '—'}</TableCell>
+                <TableCell>
+                  {payment.status === 'success' ? (
+                    <span style={{ color: 'green', fontWeight: 'bold' }}>Успешно</span>
+                  ) : payment.status === 'pending' ? (
+                    <span style={{ color: 'orange', fontWeight: 'bold' }}>Ожидание</span>
+                  ) : (
+                    <span style={{ color: 'red', fontWeight: 'bold' }}>Ошибка</span>
+                  )}
+                </TableCell>
+                <TableCell>{payment.transaction_id || '—'}</TableCell>
                 <TableCell>{new Date(payment.timestamp).toLocaleString()}</TableCell>
               </TableRow>
-            ))}
-            {payments.length === 0 && (
+            )) : (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={7} align="center">
                   Нет данных о платежах
                 </TableCell>
               </TableRow>

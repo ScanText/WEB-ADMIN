@@ -1,15 +1,7 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { Payment } from '../types/Payment';
 
-interface Payment {
-  id: number;
-  user_login?: string;
-  wallet_address: string;
-  amount: number;
-  status?: string;
-  reference?: string;
-  created_at: string;
-}
 
 interface PaymentsChartProps {
   payments: Payment[];
@@ -18,14 +10,14 @@ interface PaymentsChartProps {
 const COLORS = ['#ff5722', '#ff9800', '#4caf50', '#3f51b5', '#9c27b0', '#2196f3'];
 
 const PaymentsChart: React.FC<PaymentsChartProps> = ({ payments }) => {
-  const loginStats: Record<string, number> = {};
+  const methodStats: Record<string, number> = {};
 
   payments.forEach(p => {
-    const login = p.user_login || 'неизвестно';
-    loginStats[login] = (loginStats[login] || 0) + 1;
+    const method = p.method || 'неизвестно'; 
+    methodStats[method] = (methodStats[method] || 0) + 1;
   });
 
-  const data = Object.entries(loginStats).map(([name, value]) => ({ name, value }));
+  const data = Object.entries(methodStats).map(([name, value]) => ({ name, value }));
 
   return (
     <PieChart width={420} height={300}>

@@ -13,17 +13,17 @@ interface RevenueChartProps {
 const COLORS = ['#4caf50', '#2196f3', '#9e9e9e'];
 
 const RevenueChart: React.FC<RevenueChartProps> = ({ payments }) => {
-  const paid = payments.filter(p => p.status === 'paid');
+  const paid = payments.filter(p => p.status === 'success'); 
 
-  const plusRevenue = paid.filter(p => p.amount === 200).reduce((sum, p) => sum + p.amount, 0);
-  const premiumRevenue = paid.filter(p => p.amount === 400).reduce((sum, p) => sum + p.amount, 0);
+  const plusRevenue = paid.filter(p => p.amount === 99).reduce((sum, p) => sum + p.amount, 0);
+  const premiumRevenue = paid.filter(p => p.amount === 199).reduce((sum, p) => sum + p.amount, 0);
   const otherRevenue = paid
-    .filter(p => p.amount !== 200 && p.amount !== 400)
+    .filter(p => p.amount !== 99 && p.amount !== 199)
     .reduce((sum, p) => sum + p.amount, 0);
 
   const data = [
-    { name: 'Plus (200 грн)', value: plusRevenue },
-    { name: 'Premium (400 грн)', value: premiumRevenue },
+    { name: 'Plus (99 грн)', value: plusRevenue },
+    { name: 'Premium (199 грн)', value: premiumRevenue },
     { name: 'Другое', value: otherRevenue },
   ];
 

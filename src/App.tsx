@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Users from './pages/Users';
 
 import Sidebar from './components/Sidebar';
-import Payments from './pages/Payments';
+import PaymentsTable from './components/PaymentTable';
 import Feedbacks from './pages/Feedbacks';
 import AdminLogin, { AdminInfo } from './pages/AdminLogin';
 import { Box, Typography, Button, CircularProgress } from '@mui/material';
@@ -21,16 +21,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { fetchUploadStats } from './services/AdminService';
-
-interface Payment {
-  id: number;
-  amount: number;
-  status: string;
-  user_login: string;
-  wallet_address: string;
-  reference?: string;
-  created_at: string;
-}
+import { Payment } from './types/Payment';
 
 const App: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -42,10 +33,12 @@ const App: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
 
   useEffect(() => {
-    axios.get('http://localhost:8000/admin/payments/')
-      .then(res => setPayments(res.data))
-      .catch(err => console.error('Ошибка загрузки платежей:', err));
-  }, []);
+    if (adminInfo) {
+      axios.get('http://localhost:8000/payment/all')
+        .then(res => setPayments(res.data))
+        .catch(err => console.error('Ошибка загрузки платежей:', err));
+    }
+  }, [adminInfo]);
 
   useEffect(() => {
     const stored = localStorage.getItem("adminInfo");
@@ -112,7 +105,7 @@ const App: React.FC = () => {
                   <ul style={{ lineHeight: '1.8', paddingLeft: '1rem', margin: 0 }}>
                     <li>📎 <strong>ID:</strong> {adminInfo.id}</li>
                     <li>📧 <strong>E-mail:</strong> {adminInfo.email}</li>
-                    <li>🔐 <strong>Login:</strong> {adminInfo.login}</li>
+                    <li>🔐 <strong>Login:</strong> {adminInfo.username}</li>
                     <li>📅 <strong>Дата регистрации:</strong> {adminInfo.date_registration}</li>
                     <li>🕒 <strong>Последний вход:</strong> {adminInfo.last_login_date}</li>
                     <li>
@@ -190,7 +183,8 @@ const App: React.FC = () => {
 
         {/* Страницы */}
         {selectedPage === 'users' && <Users />}
-        {selectedPage === 'payments' && <Payments />}
+        {selectedPage === 'payments' && adminInfo && <PaymentsTable adminId={adminInfo.id} />}
+
         {selectedPage === 'feedbacks' && <Feedbacks />}
       </Box>
     </div>
